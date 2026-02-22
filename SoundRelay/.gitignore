@@ -1,0 +1,6 @@
+.env
+.vs
+.claude
+bin
+obj
+node_modules

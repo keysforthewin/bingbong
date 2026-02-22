@@ -1,0 +1,11 @@
+services:
+  soundrelay-server:
+    build: .
+    ports:
+      - "${WS_PORT:-8080}:${WS_PORT:-8080}"
+      - "3260:3260"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    restart: unless-stopped
