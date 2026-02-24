@@ -41,6 +41,7 @@ namespace SoundRelay
 
             if (!string.IsNullOrEmpty(_config.WebSocketUrl))
             {
+                _wsClient.Pin = _config.Pin;
                 _ = _wsClient.ConnectAsync(_config.WebSocketUrl);
             }
         }
@@ -108,6 +109,7 @@ namespace SoundRelay
         private void LoadConfigToUI()
         {
             txtWebSocketUrl.Text = _config.WebSocketUrl;
+            txtPin.Text = _config.Pin;
             chkLaunchAtStartup.IsChecked = GetLaunchAtStartup();
             sldVolume.Value = _config.Volume * 100;
             txtVolumeLabel.Text = $"{(int)(sldVolume.Value)}%";
@@ -129,6 +131,7 @@ namespace SoundRelay
         private void SaveConfig()
         {
             _config.WebSocketUrl = txtWebSocketUrl.Text.Trim();
+            _config.Pin = txtPin.Text.Trim();
             _config.Volume = (float)(sldVolume.Value / 100.0);
             _config.SoundMappings = _mappings.ToList();
 
@@ -292,6 +295,7 @@ namespace SoundRelay
                 }
 
                 SaveConfig();
+                _wsClient.Pin = _config.Pin;
                 await _wsClient.ConnectAsync(url);
             }
         }
@@ -370,6 +374,7 @@ namespace SoundRelay
                         btnConnect.Content = "Disconnect";
                         _isConnected = true;
                         txtWebSocketUrl.IsEnabled = false;
+                        txtPin.IsEnabled = false;
                         break;
 
                     case ConnectionState.Connecting:
@@ -378,6 +383,7 @@ namespace SoundRelay
                         btnConnect.Content = "Cancel";
                         _isConnected = true;
                         txtWebSocketUrl.IsEnabled = false;
+                        txtPin.IsEnabled = false;
                         break;
 
                     case ConnectionState.Reconnecting:
@@ -393,6 +399,7 @@ namespace SoundRelay
                         btnConnect.Content = "Connect";
                         _isConnected = false;
                         txtWebSocketUrl.IsEnabled = true;
+                        txtPin.IsEnabled = true;
                         break;
                 }
             });

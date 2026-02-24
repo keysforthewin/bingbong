@@ -61,23 +61,34 @@
                     </StackPanel>
                 </Grid>
 
-                <TextBlock Text="WebSocket URL" Style="{StaticResource FieldLabel}" Margin="0,12,0,6" />
-                <Grid>
+                <Grid Margin="0,12,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBox x:Name="txtWebSocketUrl"
-                             Style="{StaticResource DarkTextBox}"
-                             Text="ws://localhost:8080"
-                             Margin="0,0,8,0" />
+                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                        <TextBlock Text="WebSocket URL" Style="{StaticResource FieldLabel}" Margin="0,0,0,6" />
+                        <TextBox x:Name="txtWebSocketUrl"
+                                 Style="{StaticResource DarkTextBox}"
+                                 Text="ws://localhost:8080" />
+                    </StackPanel>
 
-                    <Button x:Name="btnConnect" Grid.Column="1"
+                    <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                        <TextBlock Text="PIN" Style="{StaticResource FieldLabel}" Margin="0,0,0,6" />
+                        <TextBox x:Name="txtPin"
+                                 Style="{StaticResource DarkTextBox}"
+                                 Width="70" MaxLength="4"
+                                 ToolTip="4-digit PIN for server authentication" />
+                    </StackPanel>
+
+                    <Button x:Name="btnConnect" Grid.Column="2"
                             Content="Connect"
                             Style="{StaticResource AccentButton}"
                             Click="BtnConnect_Click"
-                            MinWidth="100" />
+                            MinWidth="100"
+                            VerticalAlignment="Bottom" />
                 </Grid>
             </StackPanel>
         </Border>

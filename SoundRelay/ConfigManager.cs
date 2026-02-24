@@ -21,6 +21,7 @@ namespace SoundRelay
         public List<SoundMapping> SoundMappings { get; set; } = new();
         public bool MinimizeToTray { get; set; } = true;
         public bool StartMinimized { get; set; } = false;
+        public string Pin { get; set; } = string.Empty;
     }
 
     public static class ConfigManager

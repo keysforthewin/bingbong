@@ -5,6 +5,11 @@ const { WebSocketServer } = require('ws');
 
 const HTTP_PORT = process.env.HTTP_PORT || 3000;
 const WS_PORT = process.env.WS_PORT || 8080;
+const PIN = process.env.PIN;
+
+if (!PIN) {
+  console.warn('WARNING: No PIN set in .env — WebSocket is open to anyone.');
+}
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -14,7 +19,16 @@ const wss = new WebSocketServer({ server: wsServer });
 
 const clients = new Set();
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
+  if (PIN) {
+    const params = new URL(req.url, 'ws://base').searchParams;
+    if (params.get('pin') !== PIN) {
+      console.log('Rejected connection: wrong or missing PIN');
+      ws.close(4001, 'Unauthorized');
+      return;
+    }
+  }
+
   clients.add(ws);
   console.log(`WebSocket client connected (total: ${clients.size})`);
   ws.on('close', () => {

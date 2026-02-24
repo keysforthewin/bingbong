@@ -24,6 +24,7 @@ namespace SoundRelay
 
         public int ReconnectDelayMs { get; set; } = 3000;
         public int MaxReconnectDelayMs { get; set; } = 30000;
+        public string Pin { get; set; } = string.Empty;
 
         public event Action<string>? MessageReceived;
         public event Action<ConnectionState>? StateChanged;
@@ -56,7 +57,10 @@ namespace SoundRelay
                     _ws?.Dispose();
                     _ws = new ClientWebSocket();
 
-                    var uri = new Uri(url);
+                    var uriString = string.IsNullOrEmpty(Pin)
+                        ? url
+                        : $"{url}{(url.Contains('?') ? '&' : '?')}pin={Pin}";
+                    var uri = new Uri(uriString);
                     await _ws.ConnectAsync(uri, token);
 
                     SetState(ConnectionState.Connected);
@@ -112,8 +116,17 @@ namespace SoundRelay
 
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
-                        LogMessage("Server closed connection.");
-                        return; // Will trigger reconnect
+                        if (result.CloseStatus == (WebSocketCloseStatus)4001)
+                        {
+                            LogMessage("Authentication failed: wrong PIN.");
+                            Error?.Invoke("Authentication failed: wrong PIN.");
+                            _intentionalDisconnect = true;
+                        }
+                        else
+                        {
+                            LogMessage("Server closed connection.");
+                        }
+                        return;
                     }
 
                     if (result.MessageType == WebSocketMessageType.Text)
