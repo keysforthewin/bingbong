@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace SoundRelay
+namespace bingbong
 {
     public class SoundMapping
     {
@@ -28,7 +28,7 @@ namespace SoundRelay
     {
         private static readonly string ConfigDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "SoundRelay"
+            "bingbong"
         );
 
         private static readonly string ConfigPath = Path.Combine(ConfigDir, "config.json");

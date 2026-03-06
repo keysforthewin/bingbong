@@ -1,7 +1,7 @@
-<Window x:Class="SoundRelay.MainWindow"
+<Window x:Class="bingbong.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Sound Relay"
+        Title="bingbong"
         Width="680" Height="740"
         MinWidth="520" MinHeight="600"
         Background="{StaticResource BgBrush}"
@@ -27,7 +27,7 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="🔊 Sound Relay"
+            <TextBlock Text="🔊 bingbong"
                        Foreground="{StaticResource TextBrush}"
                        FontSize="22" FontWeight="SemiBold" />
             <TextBlock Text="WebSocket-triggered audio player"

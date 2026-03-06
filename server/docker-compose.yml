@@ -1,5 +1,5 @@
 services:
-  soundrelay-server:
+  bingbong-server:
     build: .
     ports:
       - "${WS_PORT:-8080}:${WS_PORT:-8080}"

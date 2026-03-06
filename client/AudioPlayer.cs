@@ -5,7 +5,7 @@ using System.Linq;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
-namespace SoundRelay
+namespace bingbong
 {
     public class AudioDevice
     {

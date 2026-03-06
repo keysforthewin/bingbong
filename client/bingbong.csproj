@@ -4,8 +4,8 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
-<AssemblyName>SoundRelay</AssemblyName>
-    <RootNamespace>SoundRelay</RootNamespace>
+<AssemblyName>bingbong</AssemblyName>
+    <RootNamespace>bingbong</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

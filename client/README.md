@@ -1,4 +1,4 @@
-# Sound Relay
+# bingbong
 
 A lightweight Windows desktop application that listens on a WebSocket for messages and plays audio files through a specific output device.
 
@@ -20,7 +20,7 @@ A lightweight Windows desktop application that listens on a WebSocket for messag
 ## Build & Run
 
 ```bash
-cd SoundRelay
+cd bingbong
 dotnet restore
 dotnet build
 dotnet run
@@ -32,7 +32,7 @@ dotnet run
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
 ```
 
-This produces a single `SoundRelay.exe` in the `./publish` folder that runs without needing .NET installed.
+This produces a single `bingbong.exe` in the `./publish` folder that runs without needing .NET installed.
 
 ## WebSocket Message Formats
 
@@ -63,7 +63,7 @@ Matching is **case-insensitive**, so `Play BING BONG` and `play bing bong` both 
 
 ## Configuration
 
-Settings are saved to `%APPDATA%\SoundRelay\config.json` and persist across restarts.
+Settings are saved to `%APPDATA%\bingbong\config.json` and persist across restarts.
 
 ### Config fields:
 | Field | Description | Default |

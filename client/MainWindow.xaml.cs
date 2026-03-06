@@ -6,12 +6,12 @@ using System.Windows;
 using System.Windows.Media;
 using Microsoft.Win32;
 
-namespace SoundRelay
+namespace bingbong
 {
     public partial class MainWindow : Window
     {
         private const string RunKeyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
-        private const string AppName = "SoundRelay";
+        private const string AppName = "bingbong";
 
         private AppConfig _config;
         private readonly AudioPlayer _audioPlayer;
@@ -50,7 +50,7 @@ namespace SoundRelay
         {
             _notifyIcon = new System.Windows.Forms.NotifyIcon
             {
-                Text = "Sound Relay",
+                Text = "bingbong",
                 Icon = CreateTrayIcon(),
                 Visible = true
             };
@@ -414,7 +414,7 @@ namespace SoundRelay
                 {
                     _notifyIcon.ShowBalloonTip(
                         3000,
-                        "Sound Relay - Connection Error",
+                        "bingbong - Connection Error",
                         error,
                         System.Windows.Forms.ToolTipIcon.Warning
                     );

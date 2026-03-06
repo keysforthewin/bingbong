@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 
-namespace SoundRelay
+namespace bingbong
 {
     public partial class App : Application
     {

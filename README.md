@@ -47,7 +47,7 @@ dotnet restore
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-This produces a single standalone `SoundRelay.exe` — no .NET runtime installation required.
+This produces a single standalone `bingbong.exe` — no .NET runtime installation required.
 
 ### Configuring
 
@@ -59,7 +59,7 @@ Launch the app and configure it through the UI:
 4. **Volume** — Adjust playback volume
 5. **Sound Mappings** — Map trigger names to audio files on disk (WAV, MP3, AIFF)
 
-Configuration is saved to `%APPDATA%\SoundRelay\config.json`.
+Configuration is saved to `%APPDATA%\bingbong\config.json`.
 
 ### Features
 
