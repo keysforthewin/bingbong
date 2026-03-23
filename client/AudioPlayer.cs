@@ -66,7 +66,7 @@ namespace bingbong
         /// Plays an audio file on the selected output device.
         /// Supports WAV, MP3, and other formats NAudio can handle.
         /// </summary>
-        public void Play(string filePath)
+        public void Play(string filePath, float? soundVolume = null)
         {
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {
@@ -74,12 +74,14 @@ namespace bingbong
                 return;
             }
 
+            float effectiveVolume = Math.Clamp((soundVolume ?? 1.0f) * _volume, 0f, 1f);
+
             // Fire and forget on a background thread so we don't block
             System.Threading.Tasks.Task.Run(() =>
             {
                 try
                 {
-                    PlayInternal(filePath);
+                    PlayInternal(filePath, effectiveVolume);
                 }
                 catch (Exception ex)
                 {
@@ -88,7 +90,7 @@ namespace bingbong
             });
         }
 
-        private void PlayInternal(string filePath)
+        private void PlayInternal(string filePath, float volume)
         {
             MMDevice? targetDevice = null;
 
@@ -117,7 +119,7 @@ namespace bingbong
                 if (audioFile == null) return;
 
                 using var outputDevice = new WasapiOut(targetDevice, AudioClientShareMode.Shared, true, 200);
-                outputDevice.Volume = _volume;
+                outputDevice.Volume = volume;
                 outputDevice.Init(audioFile);
 
                 var playbackDone = new System.Threading.ManualResetEventSlim(false);

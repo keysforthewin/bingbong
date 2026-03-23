@@ -121,7 +121,7 @@ namespace bingbong
             _wsClient.MaxReconnectDelayMs = _config.MaxReconnectDelayMs;
 
             _mappings.Clear();
-            foreach (var m in _config.SoundMappings)
+            foreach (var m in ConfigManager.LoadSoundMappings(_config))
             {
                 _mappings.Add(m);
             }
@@ -133,7 +133,7 @@ namespace bingbong
             _config.WebSocketUrl = txtWebSocketUrl.Text.Trim();
             _config.Pin = txtPin.Text.Trim();
             _config.Volume = (float)(sldVolume.Value / 100.0);
-            _config.SoundMappings = _mappings.ToList();
+            _config.Volumes = _mappings.ToDictionary(m => m.Name, m => m.Volume);
 
             if (cboAudioDevice.SelectedItem is AudioDevice device)
             {
@@ -244,12 +244,23 @@ namespace bingbong
                 return;
             }
 
-            _mappings.Add(new SoundMapping { Name = name, FilePath = path });
-            txtNewName.Text = "";
-            txtNewFilePath.Text = "";
+            try
+            {
+                string destPath = ConfigManager.AddSound(name, path);
+                float volume = (float)(sldNewVolume.Value / 100.0);
+                _mappings.Add(new SoundMapping { Name = name, FilePath = destPath, Volume = volume });
+                txtNewName.Text = "";
+                txtNewFilePath.Text = "";
+                sldNewVolume.Value = 100;
 
-            SaveConfig();
-            AppendLog($"Added sound mapping: '{name}'");
+                SaveConfig();
+                AppendLog($"Added sound mapping: '{name}'");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to copy audio file: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void BtnRemoveMapping_Click(object sender, RoutedEventArgs e)
@@ -259,6 +270,7 @@ namespace bingbong
                 var mapping = _mappings.FirstOrDefault(m => m.Name == name);
                 if (mapping != null)
                 {
+                    ConfigManager.RemoveSound(name);
                     _mappings.Remove(mapping);
                     SaveConfig();
                     AppendLog($"Removed sound mapping: '{name}'");
@@ -271,6 +283,25 @@ namespace bingbong
             if (sender is System.Windows.Controls.Button btn && btn.Tag is string name)
             {
                 PlaySoundByName(name);
+            }
+        }
+
+        private void SldNewVolume_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (txtNewVolumeLabel != null)
+                txtNewVolumeLabel.Text = $"{(int)sldNewVolume.Value}%";
+        }
+
+        private void SldMappingVolume_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (sender is System.Windows.Controls.Slider slider && slider.Tag is string name)
+            {
+                var mapping = _mappings.FirstOrDefault(m => m.Name == name);
+                if (mapping != null)
+                {
+                    mapping.Volume = (float)(slider.Value / 100.0);
+                    SaveConfig();
+                }
             }
         }
 
@@ -354,7 +385,7 @@ namespace bingbong
             if (mapping != null)
             {
                 AppendLog($"▶ Playing: {mapping.Name}");
-                _audioPlayer.Play(mapping.FilePath);
+                _audioPlayer.Play(mapping.FilePath, mapping.Volume);
             }
             else
             {

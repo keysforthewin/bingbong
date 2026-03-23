@@ -38,7 +38,7 @@ wss.on('connection', (ws, req) => {
   ws.on('error', () => clients.delete(ws));
 });
 
-app.get('/bingbong/:sound', (req, res) => {
+app.all('/bingbong/:sound', (req, res) => {
   const sound = req.params.sound;
   const message = `Play ${sound}`;
   let sent = 0;
