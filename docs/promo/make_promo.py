@@ -19,7 +19,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 W, H, FPS, DUR = 1920, 1080, 30, 15.0
 N_FRAMES = int(DUR * FPS)
-REPO = r"C:\Users\steve\Documents\code\bingbong"
+REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 OUT_DIR = os.path.join(REPO, "docs")
 SCRATCH = os.path.dirname(os.path.abspath(__file__))
 FFMPEG = "ffmpeg"
