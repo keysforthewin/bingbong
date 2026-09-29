@@ -21,6 +21,7 @@ namespace bingbong
         private AppConfig _config;
         private readonly AudioPlayer _audioPlayer;
         private readonly WebSocketClient _wsClient;
+        private readonly UpdateService _updater = new();
         private readonly ObservableCollection<SoundMapping> _mappings = new();
         private bool _isConnected;
         private System.Windows.Forms.NotifyIcon? _notifyIcon;
@@ -54,6 +55,13 @@ namespace bingbong
             SetupSystemTray();
             _uiReady = true;
             RefreshIntegrateText();
+
+            // Auto-update from GitHub Releases
+            txtVersion.Text = $"v{UpdateService.CurrentVersionText}";
+            _updater.IsEnabled = () => _config.AutoUpdate;
+            _updater.Log += m => Dispatcher.BeginInvoke(() => AppendLog(m));
+            _updater.Restarting += _ => Dispatcher.BeginInvoke(ExitApplication);
+            _updater.Start();
 
             if (!string.IsNullOrEmpty(_config.WebSocketUrl))
             {
@@ -110,6 +118,7 @@ namespace bingbong
         private void ExitApplication()
         {
             _notifyIcon?.Dispose();
+            _updater.Dispose();
             _wsClient.Dispose();
             _audioPlayer.Dispose();
             Application.Current.Shutdown();
@@ -125,6 +134,7 @@ namespace bingbong
             txtPin.Text = _config.Pin;
             txtTriggerBase.Text = _config.TriggerBaseUrl;
             chkLaunchAtStartup.IsChecked = GetLaunchAtStartup();
+            chkAutoUpdate.IsChecked = _config.AutoUpdate;
             sldVolume.Value = _config.Volume * 100;
             txtVolumeLabel.Text = $"{(int)(sldVolume.Value)}%";
 
@@ -150,6 +160,7 @@ namespace bingbong
             _config.WebSocketUrl = txtWebSocketUrl.Text.Trim();
             _config.Pin = txtPin.Text.Trim();
             _config.TriggerBaseUrl = txtTriggerBase.Text.Trim();
+            _config.AutoUpdate = chkAutoUpdate.IsChecked ?? true;
             _config.Volume = (float)(sldVolume.Value / 100.0);
             _config.Volumes = _mappings.ToDictionary(m => m.Name, m => m.Volume);
             // _config.SelectedAudioDeviceName is updated directly when the user picks a device.
@@ -776,6 +787,33 @@ namespace bingbong
         private void BtnClearLog_Click(object sender, RoutedEventArgs e)
         {
             txtLog.Clear();
+        }
+
+        #endregion
+
+        #region Updates
+
+        private void ChkAutoUpdate_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!_uiReady) return;
+            SaveConfig();
+            AppendLog(_config.AutoUpdate ? "Automatic updates turned on." : "Automatic updates turned off.");
+        }
+
+        private async void BtnCheckUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            btnCheckUpdate.IsEnabled = false;
+            txtUpdateStatus.Text = "Checking GitHub…";
+            try
+            {
+                var msg = await _updater.CheckAndInstallAsync(force: true) ?? "No update needed.";
+                txtUpdateStatus.Text = msg;
+                AppendLog(msg);
+            }
+            finally
+            {
+                btnCheckUpdate.IsEnabled = true;
+            }
         }
 
         #endregion

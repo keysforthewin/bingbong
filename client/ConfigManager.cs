@@ -61,6 +61,8 @@ namespace bingbong
         /// Empty = derive from WebSocketUrl (ws://host:3261 -> http://host:3260).
         /// </summary>
         public string TriggerBaseUrl { get; set; } = string.Empty;
+        /// <summary>Check GitHub Releases in the background and install new versions.</summary>
+        public bool AutoUpdate { get; set; } = true;
         public float Volume { get; set; } = 1.0f;
         public Dictionary<string, float> Volumes { get; set; } = new();
         public bool MinimizeToTray { get; set; } = true;

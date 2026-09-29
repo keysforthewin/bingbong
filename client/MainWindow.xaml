@@ -105,6 +105,8 @@
                                    Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
                         <TextBlock x:Name="txtFooterDevice" Text="" Style="{StaticResource HintText}"
                                    Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="txtVersion" Text="" Style="{StaticResource HintText}"
+                                   Margin="0,6,0,0" Opacity="0.7" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -363,6 +365,24 @@
                         </CheckBox>
                         <TextBlock Text="Closing the window hides bingbong to the tray. Use the tray icon's Exit to quit."
                                    Style="{StaticResource HintText}" Margin="0,12,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="UPDATES" Style="{StaticResource SectionLabel}" />
+                        <CheckBox x:Name="chkAutoUpdate" Style="{StaticResource DarkCheckBox}"
+                                  Checked="ChkAutoUpdate_Changed" Unchecked="ChkAutoUpdate_Changed">
+                            <StackPanel>
+                                <TextBlock Text="Update automatically when a new version is released" Foreground="{StaticResource TextBrush}" FontSize="13" />
+                                <TextBlock Text="Checks GitHub every few hours, downloads the new bingbong.exe, and restarts." Style="{StaticResource HintText}" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </CheckBox>
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button x:Name="btnCheckUpdate" Content="Check now" Style="{StaticResource SubtleButton}" Click="BtnCheckUpdate_Click" />
+                            <TextBlock x:Name="txtUpdateStatus" Text="" Style="{StaticResource HintText}" FontSize="12"
+                                       VerticalAlignment="Center" Margin="12,0,0,0" MaxWidth="440" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </StackPanel>

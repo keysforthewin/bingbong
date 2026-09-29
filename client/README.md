@@ -74,6 +74,7 @@ Settings are saved to `%APPDATA%\bingbong\config.json` and persist across restar
 | `ReconnectDelayMs` | Initial reconnect delay | `3000` |
 | `MaxReconnectDelayMs` | Max reconnect delay (backoff cap) | `30000` |
 | `SelectedAudioDeviceName` | Friendly name of the output device (matched by name, then shrinking prefix) | `""` (Windows default) |
+| `AutoUpdate` | Check GitHub Releases and self-update in the background | `true` |
 | `TriggerBaseUrl` | HTTP address used in the Integrate snippets; blank derives it from `WebSocketUrl` | `""` |
 | `Volume` | Master playback volume (0.0–1.0) | `1.0` |
 | `Volumes` | Per-sound volume, keyed by sound name | `{}` |
@@ -136,6 +137,7 @@ asyncio.run(main())
 | `WebSocketClient.cs` | Async WebSocket with auto-reconnect |
 | `AudioPlayer.cs` | NAudio WASAPI playback; name-based device matching; device-change notifications |
 | `ConfigManager.cs` | JSON config persistence |
+| `UpdateService.cs` | Auto-update from GitHub Releases (download, swap exe, restart) |
 
 ## NuGet Dependencies
 

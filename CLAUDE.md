@@ -21,6 +21,7 @@ Message flow: `HTTP request → Express server → WebSocket broadcast → WPF c
 - `WebSocketClient.cs` — WebSocket connection with auto-reconnect (exponential backoff 3s–30s)
 - `AudioPlayer.cs` — WASAPI device enumeration and audio playback (WAV/MP3/AIFF). The output device is stored and resolved **by friendly name** (`FindDeviceByName`: exact match, then shrinking prefix, then Windows default) at every play, because endpoint IDs change across reboots/re-plugs. Raises `DevicesChanged` (debounced) from an `IMMNotificationClient`.
 - `ConfigManager.cs` — JSON config persistence to `%APPDATA%\bingbong\config.json` (`SelectedAudioDeviceName`, `TriggerBaseUrl`, `Volume`, `Volumes`, `Pin`). Legacy `SelectedAudioDeviceId` is migrated to a name on load.
+- `UpdateService.cs` — Auto-update from GitHub Releases (`keysforthewin/bingbong`): polls `releases/latest` every 6 h, compares the tag to the assembly version, downloads the `bingbong.exe` asset next to the running exe, renames the running exe to `.old`, swaps, starts the new one and exits. Skips self-replace when running from `bin\Debug`/`bin\Release` or under a debugger. Toggle: `AppConfig.AutoUpdate` (default true), UI on the Connection page.
 - `App.xaml` — Dark theme: colour/brush resources, icon geometries, and templated styles (`NavButton`, `PlayButton`, `DarkComboBox`, `DarkCheckBox`, `DarkSlider`, `CodeBlock`).
 
 ### Message Formats (client accepts three)
@@ -66,6 +67,10 @@ curl http://localhost:3260/bingbong/bing_bong
 |-----------|-------------|
 | Server | express 4.18, ws 8.0, dotenv 16.0 |
 | Client | NAudio 2.2.1, Newtonsoft.Json 13.0.3, Hardcodet.NotifyIcon.Wpf 1.1.0 |
+
+## Releases
+
+Push a tag `vX.Y.Z` and `.github/workflows/release.yml` publishes a single self-contained `bingbong.exe` (version taken from the tag) to a GitHub Release. The asset must stay named `bingbong.exe` for the auto-updater. `docs/` holds the README screenshot and the 15 s promo video/GIF (regenerate with `python docs/promo/make_promo.py`; needs Pillow, numpy, ffmpeg).
 
 ## Notes
 
