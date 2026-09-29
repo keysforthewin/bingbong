@@ -17,10 +17,11 @@ Message flow: `HTTP request → Express server → WebSocket broadcast → WPF c
 
 ### Client Components
 
-- `MainWindow.xaml/.cs` — UI and event handling (connection, device selection, sound mappings, activity log)
+- `MainWindow.xaml/.cs` — Sidebar UI with five pages toggled by visibility in code-behind: Sounds (list, add via dialog or drag-drop), Output (device + master volume), Connection (URL, PIN, launch at startup), Integrate (copy-paste trigger snippets generated from config), Activity (log). Tray behaviour lives here too.
 - `WebSocketClient.cs` — WebSocket connection with auto-reconnect (exponential backoff 3s–30s)
-- `AudioPlayer.cs` — WASAPI device enumeration and audio playback (WAV/MP3/AIFF)
-- `ConfigManager.cs` — JSON config persistence to `%APPDATA%\bingbong\config.json`
+- `AudioPlayer.cs` — WASAPI device enumeration and audio playback (WAV/MP3/AIFF). The output device is stored and resolved **by friendly name** (`FindDeviceByName`: exact match, then shrinking prefix, then Windows default) at every play, because endpoint IDs change across reboots/re-plugs. Raises `DevicesChanged` (debounced) from an `IMMNotificationClient`.
+- `ConfigManager.cs` — JSON config persistence to `%APPDATA%\bingbong\config.json` (`SelectedAudioDeviceName`, `TriggerBaseUrl`, `Volume`, `Volumes`, `Pin`). Legacy `SelectedAudioDeviceId` is migrated to a name on load.
+- `App.xaml` — Dark theme: colour/brush resources, icon geometries, and templated styles (`NavButton`, `PlayButton`, `DarkComboBox`, `DarkCheckBox`, `DarkSlider`, `CodeBlock`).
 
 ### Message Formats (client accepts three)
 

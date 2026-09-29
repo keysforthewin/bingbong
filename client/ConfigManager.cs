@@ -37,6 +37,10 @@ namespace bingbong
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        /// <summary>File name only, for display in the sounds list.</summary>
+        [JsonIgnore]
+        public string FileName => Path.GetFileName(FilePath);
+
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
@@ -46,16 +50,29 @@ namespace bingbong
         public string WebSocketUrl { get; set; } = "ws://localhost:8080";
         public int ReconnectDelayMs { get; set; } = 3000;
         public int MaxReconnectDelayMs { get; set; } = 30000;
-        public string SelectedAudioDeviceId { get; set; } = string.Empty;
+        /// <summary>
+        /// Friendly name of the preferred output device. Matched by name (then by
+        /// shrinking prefix) at runtime because WASAPI endpoint IDs change after
+        /// reboots and re-plugs. Empty = Windows default device.
+        /// </summary>
+        public string SelectedAudioDeviceName { get; set; } = string.Empty;
+        /// <summary>
+        /// HTTP base of the bingbong server used for the Integrate page snippets.
+        /// Empty = derive from WebSocketUrl (ws://host:3261 -> http://host:3260).
+        /// </summary>
+        public string TriggerBaseUrl { get; set; } = string.Empty;
         public float Volume { get; set; } = 1.0f;
         public Dictionary<string, float> Volumes { get; set; } = new();
         public bool MinimizeToTray { get; set; } = true;
         public bool StartMinimized { get; set; } = false;
         public string Pin { get; set; } = string.Empty;
 
-        // Legacy field for migration only — not saved going forward
+        // Legacy fields for migration only — not saved going forward
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<LegacySoundMapping>? SoundMappings { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? SelectedAudioDeviceId { get; set; }
     }
 
     // Used only for deserializing old config.json during migration
@@ -103,8 +120,9 @@ namespace bingbong
             try
             {
                 Directory.CreateDirectory(ConfigDir);
-                // Clear legacy field so it's not written
+                // Clear legacy fields so they're not written
                 config.SoundMappings = null;
+                config.SelectedAudioDeviceId = null;
                 string json = JsonConvert.SerializeObject(config, Formatting.Indented);
                 File.WriteAllText(ConfigPath, json);
             }
@@ -190,19 +208,48 @@ namespace bingbong
             return string.IsNullOrWhiteSpace(sanitized) ? "_" : sanitized;
         }
 
+        private static void MigrateIfNeeded(AppConfig config)
+        {
+            bool changed = MigrateDeviceId(config);
+            changed |= MigrateSoundMappings(config);
+            if (changed)
+                Save(config);
+        }
+
+        /// <summary>
+        /// Older configs stored the WASAPI endpoint ID. Convert it to the device's
+        /// friendly name once (if the device is currently present) and drop the ID.
+        /// </summary>
+        private static bool MigrateDeviceId(AppConfig config)
+        {
+            if (string.IsNullOrEmpty(config.SelectedAudioDeviceId))
+                return false;
+
+            if (string.IsNullOrEmpty(config.SelectedAudioDeviceName))
+            {
+                var device = AudioPlayer.GetOutputDevices()
+                    .FirstOrDefault(d => d.Id == config.SelectedAudioDeviceId);
+                if (device != null)
+                    config.SelectedAudioDeviceName = device.Name;
+            }
+
+            config.SelectedAudioDeviceId = null;
+            return true;
+        }
+
         /// <summary>
         /// Migrates old SoundMappings (file paths in config) to file-based storage.
         /// </summary>
-        private static void MigrateIfNeeded(AppConfig config)
+        private static bool MigrateSoundMappings(AppConfig config)
         {
             if (config.SoundMappings == null || config.SoundMappings.Count == 0)
-                return;
+                return false;
 
             // Only migrate if sounds folder is empty or doesn't exist
             if (Directory.Exists(SoundsDir) && Directory.GetFiles(SoundsDir).Length > 0)
             {
                 config.SoundMappings = null;
-                return;
+                return true;
             }
 
             Directory.CreateDirectory(SoundsDir);
@@ -229,7 +276,7 @@ namespace bingbong
             }
 
             config.SoundMappings = null;
-            Save(config);
+            return true;
         }
     }
 }

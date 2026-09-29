@@ -3,311 +3,505 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:bingbong"
         Title="bingbong"
-        Width="680" Height="740"
-        MinWidth="520" MinHeight="600"
+        Width="880" Height="620"
+        MinWidth="720" MinHeight="540"
         Background="{StaticResource BgBrush}"
         WindowStartupLocation="CenterScreen"
+        AllowDrop="True"
+        DragOver="Window_DragOver"
+        Drop="Window_Drop"
         Closing="Window_Closing"
         StateChanged="Window_StateChanged">
 
     <Window.Resources>
         <local:VolumeToSliderConverter x:Key="VolumeConverter" />
         <local:VolumeToPercentConverter x:Key="VolumePercentConverter" />
-        <!-- ScrollViewer dark theme -->
         <Style TargetType="ScrollViewer">
             <Setter Property="Background" Value="Transparent" />
         </Style>
     </Window.Resources>
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />    <!-- Header -->
-            <RowDefinition Height="Auto" />    <!-- Connection -->
-            <RowDefinition Height="Auto" />    <!-- Audio Device -->
-            <RowDefinition Height="*" />       <!-- Sound Mappings -->
-            <RowDefinition Height="Auto" />    <!-- Log -->
-        </Grid.RowDefinitions>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="190" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="🔊 bingbong"
-                       Foreground="{StaticResource TextBrush}"
-                       FontSize="22" FontWeight="SemiBold" />
-            <TextBlock Text="WebSocket-triggered audio player"
-                       Foreground="{StaticResource TextDimBrush}"
-                       FontSize="13" Margin="0,4,0,0" />
-        </StackPanel>
-
-        <!-- Connection Section -->
-        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}"
-                CornerRadius="10" Padding="16" Margin="0,0,0,12">
-            <StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{StaticResource ErrorBrush}" Margin="0,0,8,0" />
-                        <TextBlock x:Name="StatusText" Text="Disconnected"
-                                   Foreground="{StaticResource TextDimBrush}" FontSize="12"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal">
-                        <CheckBox x:Name="chkLaunchAtStartup" Content="Launch at startup"
-                                  Foreground="{StaticResource TextDimBrush}" FontSize="12"
-                                  VerticalAlignment="Center" Margin="0,0,12,0"
-                                  Checked="ChkLaunchAtStartup_Changed"
-                                  Unchecked="ChkLaunchAtStartup_Changed" />
-                    </StackPanel>
-                </Grid>
-
-                <Grid Margin="0,12,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                        <TextBlock Text="WebSocket URL" Style="{StaticResource FieldLabel}" Margin="0,0,0,6" />
-                        <TextBox x:Name="txtWebSocketUrl"
-                                 Style="{StaticResource DarkTextBox}"
-                                 Text="ws://localhost:8080" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                        <TextBlock Text="PIN" Style="{StaticResource FieldLabel}" Margin="0,0,0,6" />
-                        <TextBox x:Name="txtPin"
-                                 Style="{StaticResource DarkTextBox}"
-                                 Width="70" MaxLength="4"
-                                 ToolTip="4-digit PIN for server authentication" />
-                    </StackPanel>
-
-                    <Button x:Name="btnConnect" Grid.Column="2"
-                            Content="Connect"
-                            Style="{StaticResource AccentButton}"
-                            Click="BtnConnect_Click"
-                            MinWidth="100"
-                            VerticalAlignment="Bottom" />
-                </Grid>
-            </StackPanel>
-        </Border>
-
-        <!-- Audio Device Section -->
-        <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}"
-                CornerRadius="10" Padding="16" Margin="0,0,0,12">
-            <StackPanel>
-                <TextBlock Text="Audio Output Device" Style="{StaticResource FieldLabel}" />
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <ComboBox x:Name="cboAudioDevice"
-                              Style="{StaticResource DarkComboBox}"
-                              Margin="0,0,8,0"
-                              SelectionChanged="CboAudioDevice_SelectionChanged" />
-
-                    <Button Grid.Column="1" Content="🔄 Refresh"
-                            Style="{StaticResource SubtleButton}"
-                            Click="BtnRefreshDevices_Click"
-                            Margin="0,0,8,0" />
-
-                    <Button Grid.Column="2" Content="🔊 Test"
-                            Style="{StaticResource SubtleButton}"
-                            Click="BtnTestAudio_Click" />
-                </Grid>
-
-                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                    <TextBlock Text="Volume" Foreground="{StaticResource TextDimBrush}"
-                               FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0" />
-                    <Slider x:Name="sldVolume" Width="200" Minimum="0" Maximum="100" Value="100"
-                            VerticalAlignment="Center"
-                            ValueChanged="SldVolume_ValueChanged" />
-                    <TextBlock x:Name="txtVolumeLabel" Text="100%"
-                               Foreground="{StaticResource TextDimBrush}"
-                               FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0" />
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
-        <!-- Sound Mappings Section -->
-        <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}"
-                CornerRadius="10" Padding="16" Margin="0,0,0,12">
+        <!-- Sidebar -->
+        <Border Grid.Column="0" Background="{StaticResource SidebarBrush}"
+                BorderBrush="#2E2E40" BorderThickness="0,0,1,0" Padding="12,16">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" Margin="0,0,0,12">
-                    <TextBlock Text="Sound Mappings"
-                               Foreground="{StaticResource TextBrush}"
-                               FontSize="15" FontWeight="SemiBold"
-                               VerticalAlignment="Center" />
-                    <TextBlock Text="WebSocket message → audio file"
-                               Foreground="{StaticResource TextDimBrush}"
-                               FontSize="11" HorizontalAlignment="Right"
-                               VerticalAlignment="Center" />
+                <!-- Wordmark -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,4,8,18">
+                    <Border Width="28" Height="28" CornerRadius="8" Background="{StaticResource AccentBrush}">
+                        <Path Data="{StaticResource IconSpeaker}" Style="{StaticResource StrokeIcon}" Stroke="White" Width="15" Height="15" />
+                    </Border>
+                    <TextBlock Text="bingbong" Foreground="{StaticResource TextBrush}"
+                               FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0" />
+                </StackPanel>
+
+                <!-- Navigation -->
+                <StackPanel Grid.Row="1">
+                    <Button x:Name="navSounds" Style="{StaticResource NavButton}" Tag="Active"
+                            CommandParameter="Sounds" Click="Nav_Click" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconMusic}" Style="{StaticResource StrokeIcon}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                            <TextBlock Text="Sounds" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="navOutput" Style="{StaticResource NavButton}"
+                            CommandParameter="Output" Click="Nav_Click" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconSpeaker}" Style="{StaticResource StrokeIcon}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                            <TextBlock Text="Output" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="navConnection" Style="{StaticResource NavButton}"
+                            CommandParameter="Connection" Click="Nav_Click" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconLink}" Style="{StaticResource StrokeIcon}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                            <TextBlock Text="Connection" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="navIntegrate" Style="{StaticResource NavButton}"
+                            CommandParameter="Integrate" Click="Nav_Click" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconCode}" Style="{StaticResource StrokeIcon}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                            <TextBlock Text="Integrate" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="navActivity" Style="{StaticResource NavButton}"
+                            CommandParameter="Activity" Click="Nav_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconList}" Style="{StaticResource StrokeIcon}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                            <TextBlock Text="Activity" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Footer status -->
+                <Border Grid.Row="3" Background="{StaticResource BgBrush}" CornerRadius="8" Padding="12,10">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="{StaticResource ErrorBrush}"
+                                     VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBlock x:Name="StatusText" Text="Disconnected"
+                                       Foreground="{StaticResource TextBrush}" FontSize="13" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <TextBlock x:Name="txtFooterHost" Text="" Style="{StaticResource HintText}"
+                                   Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="txtFooterDevice" Text="" Style="{StaticResource HintText}"
+                                   Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Pages -->
+        <Grid Grid.Column="1" Margin="24,22,24,22">
+
+            <!-- Sounds page -->
+            <Grid x:Name="pageSounds">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="Sounds" Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="Each sound plays when the server sends its name." Style="{StaticResource PageSubtitle}" />
+                    </StackPanel>
+                    <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                            Click="BtnAddSound_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconPlus}" Style="{StaticResource StrokeIcon}" Stroke="White" Width="12" Height="12" StrokeThickness="2.5" />
+                            <TextBlock Text="Add sound" Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                 </Grid>
 
-                <!-- Add new mapping -->
-                <Border Grid.Row="1" Background="{StaticResource BgBrush}"
-                        CornerRadius="8" Padding="12" Margin="0,0,0,10">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                <!-- Inline "confirm new sound" panel (hidden until a file is chosen or dropped) -->
+                <Border x:Name="pnlNewSound" Grid.Row="1" Style="{StaticResource Card}" Padding="14"
+                        Margin="0,0,0,12" Visibility="Collapsed"
+                        BorderBrush="{StaticResource AccentBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock x:Name="txtNewFileName" Text="" Style="{StaticResource HintText}" Margin="0,0,0,8" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                            <TextBlock Text="Trigger Name" Style="{StaticResource FieldLabel}" />
-                            <TextBox x:Name="txtNewName"
-                                     Style="{StaticResource DarkTextBox}"
-                                     Width="160"
-                                     ToolTip="The name that triggers this sound (e.g., 'bing bong')" />
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                            <TextBlock Text="Audio File" Style="{StaticResource FieldLabel}" />
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="txtNewFilePath"
-                                         Style="{StaticResource DarkTextBox}"
-                                         IsReadOnly="True"
-                                         Margin="0,0,6,0" />
-                                <Button Grid.Column="1" Content="Browse"
-                                        Style="{StaticResource SubtleButton}"
-                                        Click="BtnBrowseFile_Click"
-                                        VerticalAlignment="Bottom" />
-                            </Grid>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Margin="0,0,8,0">
-                            <TextBlock Text="Volume" Style="{StaticResource FieldLabel}" />
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                                <Slider x:Name="sldNewVolume"
-                                        Minimum="0" Maximum="100" Value="100"
-                                        Width="80" VerticalAlignment="Center"
-                                        ValueChanged="SldNewVolume_ValueChanged"
-                                        ToolTip="Per-sound volume" />
-                                <TextBlock x:Name="txtNewVolumeLabel"
-                                           Text="100%"
-                                           Foreground="{StaticResource TextDimBrush}"
-                                           FontSize="11" Width="32"
-                                           VerticalAlignment="Center" Margin="4,0,0,0" />
+                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                <TextBlock Text="Name (what the server sends)" Style="{StaticResource FieldLabel}" />
+                                <TextBox x:Name="txtNewName" Style="{StaticResource DarkTextBox}" KeyDown="TxtNewName_KeyDown" />
                             </StackPanel>
-                        </StackPanel>
 
-                        <Button Grid.Column="3" Content="＋ Add"
-                                Style="{StaticResource AccentButton}"
-                                Click="BtnAddMapping_Click"
-                                VerticalAlignment="Bottom" />
-                    </Grid>
+                            <StackPanel Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Bottom">
+                                <TextBlock Text="Volume" Style="{StaticResource FieldLabel}" />
+                                <StackPanel Orientation="Horizontal" Height="36">
+                                    <Slider x:Name="sldNewVolume" Style="{StaticResource DarkSlider}"
+                                            Minimum="0" Maximum="100" Value="100" Width="110"
+                                            VerticalAlignment="Center" ValueChanged="SldNewVolume_ValueChanged" />
+                                    <TextBlock x:Name="txtNewVolumeLabel" Text="100%" Style="{StaticResource HintText}"
+                                               Width="34" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Button Grid.Column="2" Content="Add" Style="{StaticResource PrimaryButton}"
+                                    VerticalAlignment="Bottom" MinWidth="70" Margin="0,0,8,0" Click="BtnConfirmAdd_Click" />
+                            <Button Grid.Column="3" Content="Cancel" Style="{StaticResource SubtleButton}"
+                                    VerticalAlignment="Bottom" Click="BtnCancelAdd_Click" />
+                        </Grid>
+                    </StackPanel>
                 </Border>
 
-                <!-- Mappings list -->
-                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl x:Name="lstMappings">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{StaticResource BgBrush}"
-                                        CornerRadius="6" Padding="12,10" Margin="0,0,0,4">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
+                <!-- Drop zone -->
+                <Grid Grid.Row="2" Height="52" Margin="0,0,0,14">
+                    <Rectangle Stroke="#4A4A60" StrokeDashArray="4 3" StrokeThickness="1" RadiusX="10" RadiusY="10" />
+                    <TextBlock Text="Drop a .wav or .mp3 anywhere in this window to add it as a sound"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="13"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Grid>
 
-                                        <Border Grid.Column="0" Background="#33FFFFFF"
-                                                CornerRadius="4" Padding="8,4" Margin="0,0,10,0"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}"
-                                                       Foreground="{StaticResource AccentHoverBrush}"
-                                                       FontSize="13" FontWeight="SemiBold" />
-                                        </Border>
+                <!-- Column headers -->
+                <Grid Grid.Row="3" Margin="14,0,14,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="44" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="160" />
+                        <ColumnDefinition Width="32" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="1" Text="NAME" Style="{StaticResource SectionLabel}" Margin="0" />
+                    <TextBlock Grid.Column="2" Text="VOLUME" Style="{StaticResource SectionLabel}" Margin="0" />
+                </Grid>
 
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal"
-                                                    Margin="8,0,4,0" VerticalAlignment="Center">
-                                            <TextBlock Text="🔊" FontSize="12"
-                                                       VerticalAlignment="Center" Margin="0,0,4,0" />
-                                            <Slider Minimum="0" Maximum="100"
-                                                    Value="{Binding Volume, Mode=TwoWay, Converter={StaticResource VolumeConverter}}"
-                                                    Width="80" VerticalAlignment="Center"
-                                                    Tag="{Binding Name}"
-                                                    ValueChanged="SldMappingVolume_ValueChanged"
-                                                    ToolTip="Per-sound volume" />
-                                            <TextBlock
-                                                Text="{Binding Volume, Converter={StaticResource VolumePercentConverter}}"
-                                                Foreground="{StaticResource TextDimBrush}"
-                                                FontSize="11" Width="32"
-                                                VerticalAlignment="Center" Margin="4,0,0,0" />
-                                        </StackPanel>
+                <!-- List -->
+                <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <ItemsControl x:Name="lstMappings">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8"
+                                            Padding="12,10" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="44" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="160" />
+                                                <ColumnDefinition Width="32" />
+                                            </Grid.ColumnDefinitions>
 
-                                        <Button Grid.Column="2" Content="▶ Play"
-                                                Style="{StaticResource SubtleButton}"
-                                                Tag="{Binding Name}"
-                                                Click="BtnPlayMapping_Click"
-                                                Margin="4,0,4,0"
-                                                VerticalAlignment="Center" />
+                                            <Button Grid.Column="0" Style="{StaticResource PlayButton}"
+                                                    HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                    Tag="{Binding Name}" Click="BtnPlayMapping_Click"
+                                                    ToolTip="Play this sound now" />
 
-                                        <Button Grid.Column="3" Content="✕ Remove"
-                                                Style="{StaticResource DangerButton}"
-                                                Tag="{Binding Name}"
-                                                Click="BtnRemoveMapping_Click"
-                                                VerticalAlignment="Center" />
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0">
+                                                <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextBrush}"
+                                                           FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding FileName}" Style="{StaticResource HintText}"
+                                                           Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Slider Style="{StaticResource DarkSlider}" Minimum="0" Maximum="100" Width="110"
+                                                        Value="{Binding Volume, Mode=TwoWay, Converter={StaticResource VolumeConverter}}"
+                                                        Tag="{Binding Name}" ValueChanged="SldMappingVolume_ValueChanged"
+                                                        ToolTip="Volume for this sound" />
+                                                <TextBlock Text="{Binding Volume, Converter={StaticResource VolumePercentConverter}}"
+                                                           Style="{StaticResource HintText}" FontSize="12"
+                                                           Width="36" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <Button Grid.Column="3" Style="{StaticResource IconButton}"
+                                                    Tag="{Binding Name}" Click="BtnRemoveMapping_Click"
+                                                    ToolTip="Remove this sound">
+                                                <Path Data="{StaticResource IconTrash}" Style="{StaticResource StrokeIcon}"
+                                                      Stroke="{StaticResource TextDimBrush}" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="txtNoSounds" Text="No sounds yet. Click Add sound or drop an audio file here."
+                                   Style="{StaticResource HintText}" FontSize="13" Margin="14,10,0,0" Visibility="Collapsed" />
+                    </StackPanel>
                 </ScrollViewer>
             </Grid>
-        </Border>
 
-        <!-- Log Section -->
-        <Border Grid.Row="4" Background="{StaticResource SurfaceBrush}"
-                CornerRadius="10" Padding="12" Height="140">
-            <Grid>
+            <!-- Output page -->
+            <StackPanel x:Name="pageOutput" Visibility="Collapsed">
+                <TextBlock Text="Output" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="Where sounds play. The device is remembered by its name, so it survives reboots and re-plugs."
+                           Style="{StaticResource PageSubtitle}" Margin="0,4,0,18" />
+
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="DEVICE" Style="{StaticResource SectionLabel}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ComboBox x:Name="cboAudioDevice" Style="{StaticResource DarkComboBox}"
+                                      Margin="0,0,8,0" SelectionChanged="CboAudioDevice_SelectionChanged" />
+
+                            <Button Grid.Column="1" Style="{StaticResource SubtleButton}" Margin="0,0,8,0"
+                                    Click="BtnRefreshDevices_Click" ToolTip="Re-scan audio devices">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconRefresh}" Style="{StaticResource StrokeIcon}" Width="14" Height="14" />
+                                    <TextBlock Text="Refresh" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Grid.Column="2" Style="{StaticResource SubtleButton}"
+                                    Click="BtnTestAudio_Click" ToolTip="Play the first sound on this device">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconPlay}" Style="{StaticResource FillIcon}" Width="10" Height="10" />
+                                    <TextBlock Text="Test" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <TextBlock x:Name="txtDeviceStatus" Text="" Style="{StaticResource HintText}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="MASTER VOLUME" Style="{StaticResource SectionLabel}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Path Data="{StaticResource IconSpeaker}" Style="{StaticResource StrokeIcon}"
+                                  Stroke="{StaticResource TextDimBrush}" Margin="0,0,12,0" />
+                            <Slider x:Name="sldVolume" Grid.Column="1" Style="{StaticResource DarkSlider}"
+                                    Minimum="0" Maximum="100" Value="100" VerticalAlignment="Center"
+                                    ValueChanged="SldVolume_ValueChanged" />
+                            <TextBlock x:Name="txtVolumeLabel" Grid.Column="2" Text="100%"
+                                       Foreground="{StaticResource TextBrush}" FontSize="13" Width="40"
+                                       TextAlignment="Right" VerticalAlignment="Center" Margin="12,0,0,0" />
+                        </Grid>
+                        <TextBlock Text="Applied on top of each sound's own volume." Style="{StaticResource HintText}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Connection page -->
+            <StackPanel x:Name="pageConnection" Visibility="Collapsed">
+                <TextBlock Text="Connection" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="Set this once. bingbong reconnects on its own if the server drops, backing off from 3 s to 30 s."
+                           Style="{StaticResource PageSubtitle}" Margin="0,4,0,18" />
+
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="SERVER" Style="{StaticResource SectionLabel}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                <TextBlock Text="WebSocket URL" Style="{StaticResource FieldLabel}" />
+                                <TextBox x:Name="txtWebSocketUrl" Style="{StaticResource DarkTextBox}"
+                                         Text="ws://localhost:8080" TextChanged="ConnectionField_TextChanged" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="PIN" Style="{StaticResource FieldLabel}" />
+                                <TextBox x:Name="txtPin" Style="{StaticResource DarkTextBox}" Width="100" MaxLength="4"
+                                         ToolTip="4-digit PIN from the server's .env" TextChanged="ConnectionField_TextChanged" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <Button x:Name="btnConnect" Content="Connect" Style="{StaticResource PrimaryButton}"
+                                    MinWidth="110" Click="BtnConnect_Click" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                                <Ellipse x:Name="ConnDot" Width="8" Height="8" Fill="{StaticResource ErrorBrush}"
+                                         VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock x:Name="txtConnStatus" Text="Disconnected"
+                                           Foreground="{StaticResource TextDimBrush}" FontSize="13" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="WINDOWS" Style="{StaticResource SectionLabel}" />
+                        <CheckBox x:Name="chkLaunchAtStartup" Style="{StaticResource DarkCheckBox}"
+                                  Checked="ChkLaunchAtStartup_Changed" Unchecked="ChkLaunchAtStartup_Changed">
+                            <StackPanel>
+                                <TextBlock Text="Launch bingbong at startup" Foreground="{StaticResource TextBrush}" FontSize="13" />
+                                <TextBlock Text="Starts hidden in the system tray" Style="{StaticResource HintText}" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </CheckBox>
+                        <TextBlock Text="Closing the window hides bingbong to the tray. Use the tray icon's Exit to quit."
+                                   Style="{StaticResource HintText}" Margin="0,12,0,0" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Integrate page -->
+            <ScrollViewer x:Name="pageIntegrate" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="How to trigger a sound" Style="{StaticResource PageTitle}" />
+                    <TextBlock Style="{StaticResource BodyText}" Foreground="#C8C8D8" Margin="0,6,0,14" LineHeight="20">
+                        Send any web request to the trigger URL and every bingbong that is connected plays that sound.
+                        The last part of the URL is the sound's name, exactly as it appears in your Sounds list.
+                        The examples below already use your saved server address and PIN.
+                    </TextBlock>
+
+                    <Border Background="#232334" CornerRadius="8" Padding="12,10" Margin="0,0,0,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Fill examples with" Style="{StaticResource BodyText}"
+                                       VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <ComboBox x:Name="cboExampleSound" Grid.Column="1" Style="{StaticResource DarkComboBox}"
+                                      SelectionChanged="CboExampleSound_SelectionChanged" />
+                            <TextBlock Grid.Column="3" Text="Trigger server" Style="{StaticResource BodyText}"
+                                       VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <TextBox x:Name="txtTriggerBase" Grid.Column="4" Style="{StaticResource DarkTextBox}"
+                                     TextChanged="TxtTriggerBase_TextChanged"
+                                     ToolTip="HTTP address of the bingbong server. Leave blank to derive it from the WebSocket URL." />
+                        </Grid>
+                    </Border>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <!-- Trigger URL -->
+                            <Border Style="{StaticResource Card}" Padding="12,12" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="Trigger URL" Foreground="{StaticResource TextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                            <TextBlock Text="Paste into any webhook field: Shopify, Zapier, your own code" Style="{StaticResource HintText}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <Button Content="Copy" Style="{StaticResource PrimaryButton}" Padding="12,5" FontSize="12"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top" Tag="url" Click="BtnCopy_Click" />
+                                    </Grid>
+                                    <TextBox x:Name="txtSnipUrl" Style="{StaticResource CodeBlock}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- curl -->
+                            <Border Style="{StaticResource Card}" Padding="12,12" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="From a terminal" Foreground="{StaticResource TextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                            <TextBlock Text="Quick way to check everything is working" Style="{StaticResource HintText}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <Button Content="Copy" Style="{StaticResource PrimaryButton}" Padding="12,5" FontSize="12"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top" Tag="curl" Click="BtnCopy_Click" />
+                                    </Grid>
+                                    <TextBox x:Name="txtSnipCurl" Style="{StaticResource CodeBlock}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Node fetch -->
+                            <Border Style="{StaticResource Card}" Padding="12,12" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="From Node.js: play a sound" Foreground="{StaticResource TextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                            <TextBlock Text="One line, no packages needed" Style="{StaticResource HintText}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <Button Content="Copy" Style="{StaticResource PrimaryButton}" Padding="12,5" FontSize="12"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top" Tag="fetch" Click="BtnCopy_Click" />
+                                    </Grid>
+                                    <TextBox x:Name="txtSnipFetch" Style="{StaticResource CodeBlock}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <!-- Node ws listener -->
+                            <Border Style="{StaticResource Card}" Padding="12,12" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <StackPanel Margin="0,0,70,0">
+                                            <TextBlock Text="From Node.js: listen for sounds" Foreground="{StaticResource TextBrush}" FontSize="13" FontWeight="SemiBold" />
+                                            <TextBlock Text="Do what this app does from your own script. Needs: npm install ws" Style="{StaticResource HintText}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <Button Content="Copy" Style="{StaticResource PrimaryButton}" Padding="12,5" FontSize="12"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top" Tag="listen" Click="BtnCopy_Click" />
+                                    </Grid>
+                                    <TextBox x:Name="txtSnipListen" Style="{StaticResource CodeBlock}" MinHeight="220" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Plain English -->
+                            <Border Background="{StaticResource SuccessSoftBrush}" BorderBrush="{StaticResource SuccessBorderBrush}"
+                                    BorderThickness="1" CornerRadius="10" Padding="12,12">
+                                <StackPanel>
+                                    <TextBlock Text="In plain English" Foreground="{StaticResource SuccessTextBrush}" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,6" />
+                                    <TextBlock x:Name="txtPlain1" Style="{StaticResource BodyText}" Foreground="#C8E6D8" FontSize="12" Margin="0,0,0,4" />
+                                    <TextBlock x:Name="txtPlain2" Style="{StaticResource BodyText}" Foreground="#C8E6D8" FontSize="12" Margin="0,0,0,4" />
+                                    <TextBlock x:Name="txtPlain3" Style="{StaticResource BodyText}" Foreground="#C8E6D8" FontSize="12" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Activity page -->
+            <Grid x:Name="pageActivity" Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" Margin="0,0,0,6">
-                    <TextBlock Text="Activity Log"
-                               Foreground="{StaticResource TextDimBrush}"
-                               FontSize="12" VerticalAlignment="Center" />
-                    <Button Content="Clear"
-                            Style="{StaticResource DangerButton}"
-                            HorizontalAlignment="Right"
-                            Click="BtnClearLog_Click" />
+                <Grid Grid.Row="0" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="Activity" Style="{StaticResource PageTitle}" />
+                        <TextBlock Text="Connection events and every sound that was triggered." Style="{StaticResource PageSubtitle}" />
+                    </StackPanel>
+                    <Button Content="Clear" Style="{StaticResource DangerButton}"
+                            HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtnClearLog_Click" />
                 </Grid>
 
-                <TextBox x:Name="txtLog" Grid.Row="1"
-                         Background="{StaticResource BgBrush}"
-                         Foreground="{StaticResource TextDimBrush}"
-                         BorderBrush="{StaticResource BorderBrush}"
-                         BorderThickness="1"
-                         FontFamily="Consolas" FontSize="11"
-                         IsReadOnly="True"
-                         TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Auto"
-                         Padding="8" />
+                <TextBox x:Name="txtLog" Grid.Row="1" Style="{StaticResource CodeBlock}"
+                         Foreground="{StaticResource TextDimBrush}" FontSize="11"
+                         TextWrapping="Wrap" HorizontalScrollBarVisibility="Disabled" />
             </Grid>
-        </Border>
+        </Grid>
     </Grid>
 </Window>
