@@ -69,7 +69,7 @@ namespace bingbong
             _notifyIcon = new System.Windows.Forms.NotifyIcon
             {
                 Text = "bingbong",
-                Icon = CreateTrayIcon(),
+                Icon = LoadTrayIcon(),
                 Visible = true
             };
 
@@ -81,32 +81,23 @@ namespace bingbong
             _notifyIcon.DoubleClick += (s, e) => ShowWindow();
         }
 
-        private static System.Drawing.Icon CreateTrayIcon()
+        /// <summary>Loads the tray icon from the embedded bingbong.ico (same art as the window and exe).</summary>
+        private static System.Drawing.Icon LoadTrayIcon()
         {
-            var bitmap = new System.Drawing.Bitmap(32, 32);
-            using var g = System.Drawing.Graphics.FromImage(bitmap);
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.Clear(System.Drawing.Color.Transparent);
-
-            // Purple circle background
-            using (var brush = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(124, 58, 237)))
-                g.FillEllipse(brush, 1, 1, 30, 30);
-
-            // White speaker body
-            g.FillRectangle(System.Drawing.Brushes.White, 7, 11, 6, 10);
-
-            // White speaker cone
-            var cone = new System.Drawing.PointF[]
+            try
             {
-                new(13, 8), new(20, 4), new(20, 28), new(13, 24)
-            };
-            g.FillPolygon(System.Drawing.Brushes.White, cone);
-
-            // Sound wave arc
-            using var pen = new System.Drawing.Pen(System.Drawing.Color.White, 2f);
-            g.DrawArc(pen, 21, 9, 7, 14, -60, 120);
-
-            return System.Drawing.Icon.FromHandle(bitmap.GetHicon());
+                var res = Application.GetResourceStream(new Uri("pack://application:,,,/bingbong.ico"));
+                if (res != null)
+                {
+                    using var stream = res.Stream;
+                    return new System.Drawing.Icon(stream, new System.Drawing.Size(32, 32));
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Could not load tray icon: {ex.Message}");
+            }
+            return System.Drawing.SystemIcons.Application;
         }
 
         private void ShowWindow()

@@ -6,7 +6,12 @@
     <UseWPF>true</UseWPF>
 <AssemblyName>bingbong</AssemblyName>
     <RootNamespace>bingbong</RootNamespace>
+    <ApplicationIcon>bingbong.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="bingbong.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
